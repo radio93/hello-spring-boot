@@ -1,0 +1,73 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <style type="text/css">
+        body, html, #allmap {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            font-family: "微软雅黑";
+        }
+    </style>
+    <script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=TeQNpmGWctYreIKgGwmRRaISoeNf3lEb"></script>
+    <title>浏览器定位</title>
+</head>
+<script src="js/jquery.min.js"></script>
+<body>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+    var map = new BMap.Map("allmap");//创建Map实例，注意页面中一定要有个id为allmp的div
+    var point = new BMap.Point(116.331398,39.897445);//创建定坐标
+    map.centerAndZoom(point,12);//// 初始化地图,设置中心点坐标和地图级别
+
+    var geolocation = new BMap.Geolocation();
+    var gc = new BMap.Geocoder();//创建地理编码器
+    // 开启SDK辅助定位
+    geolocation.enableSDKLocation();
+    geolocation.getCurrentPosition(function(r){
+        if(this.getStatus() == BMAP_STATUS_SUCCESS){
+            var mk = new BMap.Marker(r.point);
+            map.addOverlay(mk);
+            map.panTo(r.point);
+            // alert('您的位置：' + r.point.lng + ',' + r.point.lat);
+
+            var pt = r.point;
+            map.panTo(pt);//移动地图中心点
+            //alert(r.point.lng);//X轴
+            //alert(r.point.lat);//Y轴
+
+            gc.getLocation(pt, function(rs){
+                var addComp = rs.addressComponents;
+                //alert(addComp.city);
+                // alert(addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber);
+            });
+
+            var data = JSON.stringify(r);
+            $.ajax({
+                type : "POST",
+                dataType: "json",//通过GET方式上传请求
+                contentType : "application/json",//上传内容格式为json结构
+                data : data,                                 //上传的参数
+                async: false ,
+                url : "addr",     //请求的url。与后端@Request Mapping注解中的值一致。
+                success : function(data) {          //请求成功的回调函数
+                    // if (data.code === 0){
+                        // alert("成功");
+                        // window.location.href = "success";
+                    // }
+                },
+                error : function(e) {           //请求失败的回调函数
+                    // console.log(e);
+                }
+            });
+
+        }
+        else {
+            // alert('failed'+this.getStatus());
+        }
+    });
+</script>
